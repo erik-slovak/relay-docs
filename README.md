@@ -12,3 +12,4 @@ This repository holds the product and engineering documentation.
 - [Architecture](docs/architecture.md)
 - [API reference](docs/api-reference.md)
 - [Delivery guarantees](docs/delivery-guarantees.md)
+- [Publish rate limiting](docs/rate-limiting.md)
