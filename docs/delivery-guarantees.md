@@ -21,12 +21,15 @@ jitter:
 - Attempt 1: immediate
 - Attempt 2: ~30 seconds
 - Attempt 3: ~2 minutes
-- Attempt 4: ~15 minutes
-- Attempt 5: ~1 hour
-- Attempts 6–10: every 6 hours
+- Attempt 4: ~10 minutes
+- Attempt 5: ~30 minutes
+- Attempt 6: ~2 hours
+- Attempts 7–12: every 4 hours
 
-After the tenth failed attempt the delivery is marked `failed` and moves to
+After the twelfth failed attempt the delivery is marked `failed` and moves to
 the dead-letter view, where it can be replayed manually for up to 30 days.
+Subscriptions can override the schedule with a custom `retry_policy`, capped
+at 20 attempts over 72 hours.
 
 ## Ordering
 
@@ -38,10 +41,20 @@ arrives first. Consumers that need strict ordering should buffer on
 ## Endpoint health and pausing
 
 An endpoint that fails persistently degrades the whole subscription's
-throughput. Relay tracks a rolling success rate per endpoint; below 10%
-over one hour, the subscription is automatically **paused** and the owner is
-notified. Paused subscriptions accumulate deliveries as `pending` for 24
-hours, after which new events skip the subscription entirely.
+throughput. Relay tracks a rolling success rate per endpoint; below 5% over
+30 minutes, the subscription is automatically **paused** and the owner is
+notified through every configured channel. Paused subscriptions accumulate
+deliveries as `pending` for 72 hours and resume with full backfill when the
+endpoint recovers — new events never silently skip a paused subscription.
+
+## Failure budgets
+
+Each subscription carries a monthly failure budget: the fraction of
+deliveries allowed to end `failed` before Relay escalates. The default
+budget is 0.1%. Exhausting it triggers an incident notification and freezes
+non-essential traffic (replays, backfills) to the endpoint until the owner
+acknowledges. Budgets make chronic low-grade endpoint rot visible long
+before it becomes an outage.
 
 ## Timeouts
 
