@@ -31,10 +31,12 @@ real deliveries; they route to the CLI tunnel instead.
 curl -X POST https://api.relay.dev/v1/events \
   -H "Authorization: Bearer $RELAY_API_KEY" \
   -H "Idempotency-Key: inv_9f2c1" \
+  -H "Relay-Schema-Version: 2026-07-01" \
   -d '{
     "topic": "billing",
     "type": "invoice.paid",
-    "payload": { "invoice_id": "inv_9f2c1", "amount_cents": 12900 }
+    "payload": { "invoice_id": "inv_9f2c1", "amount_cents": 12900 },
+    "deduplication_window": "24h"
   }'
 ```
 
@@ -65,6 +67,23 @@ Returns `202 Accepted` with the stored event:
 of an event across all subscriptions. Supports cursor pagination via
 `starting_after`.
 
+## Replay a delivery
+
+`POST /v1/deliveries/{id}/replay`
+
+Replays create a **new** delivery with a fresh id; the original attempt
+history is preserved untouched. Available for 30 days after publish.
+
+| Field         | Type    | Required | Description                                 |
+| ------------- | ------- | -------- | ------------------------------------------- |
+| `endpoint`    | string  | no       | Override destination for this replay only.  |
+| `skip_filter` | boolean | no       | Deliver even if the filter no longer matches.|
+
+```bash
+curl -X POST https://api.relay.dev/v1/deliveries/dlv_01J8ZR9K2P/replay \
+  -H "Authorization: Bearer $RELAY_API_KEY"
+```
+
 ## Errors
 
 Errors use conventional status codes with a machine-readable body:
@@ -78,9 +97,11 @@ Errors use conventional status codes with a machine-readable body:
 }
 ```
 
-| Status | Meaning                                      |
-| ------ | -------------------------------------------- |
-| 400    | Malformed request or invalid filter.         |
-| 401    | Missing or invalid API key.                  |
-| 409    | Idempotency key reuse with different body.   |
-| 429    | Publish rate limit exceeded.                 |
+| Status | Meaning                                        |
+| ------ | ---------------------------------------------- |
+| 400    | Malformed request or invalid filter.           |
+| 401    | Missing or invalid API key.                    |
+| 403    | Key lacks scope for the requested environment. |
+| 409    | Idempotency key reuse with different body.     |
+| 410    | Replay window (30 days) has elapsed.           |
+| 429    | Publish rate limit exceeded — see `Retry-After`.|

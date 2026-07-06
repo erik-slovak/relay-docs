@@ -48,8 +48,6 @@ queryable for 30 days.
 - **Not a streaming platform.** Ordering is best-effort per subscription;
   consumers needing strict ordering should sequence on their side using
   `sequence_id`.
-- **Not a transformation layer.** Payloads are delivered as published, apart
-  from envelope fields. Transformations belong in the consumer.
 
 ## Product surface
 
@@ -59,8 +57,10 @@ Relay ships as three pieces:
    keys and batch support.
 2. **Dashboard** — subscription management, delivery search, replay, and
    per-endpoint health.
-3. **CLI** — local tunnel for development (`relay listen`), fixture replay,
-   and CI smoke checks.
+3. **CLI** — local tunnel for development (`relay listen`) and CI smoke
+   checks.
+4. **Transformations** — optional per-subscription payload mappers (JSONata)
+   applied at delivery time, versioned alongside the subscription.
 
 ## Positioning
 
@@ -68,3 +68,8 @@ Relay competes with building in-house, not with queues or brokers. The
 adoption pitch is time-to-first-webhook: a producer integrates the publish
 API in under an hour, and a consumer receives signed, retried deliveries with
 zero infrastructure of their own.
+
+With transformations in the product surface, the second pitch is
+consumer-shaped payloads: teams stop writing glue services whose only job is
+reshaping webhook bodies, because the mapping lives on the subscription
+itself and is versioned, testable, and replayable like everything else.

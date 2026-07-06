@@ -11,11 +11,13 @@ queue:
 ```mermaid
 flowchart LR
     P[Producer] -->|POST /v1/events| I[Ingest API]
-    I --> Q[(Delivery queue)]
     I --> DB[(Postgres)]
+    O[Outbox sweeper] --> DB
+    O --> Q[(Delivery queue)]
     Q --> W[Delivery workers]
     W -->|HTTPS + signature| E[Subscriber endpoint]
     W --> DB
+    W -->|exhausted| DLQ[(Dead-letter view)]
     D[Dashboard] --> DB
 ```
 
@@ -54,10 +56,18 @@ Four tables carry the domain; everything else is bookkeeping:
 
 ## Signing
 
-Every delivery is signed with HMAC-SHA256 over a canonical string of
-timestamp, delivery id, and raw body. The signature travels in the
-`Relay-Signature` header. Keys are per-subscription and rotatable with a
-24-hour overlap window during which both old and new signatures validate.
+Signature **v2** signs every delivery with Ed25519 over a canonical string
+of timestamp, delivery id, and raw body; the signature and key id travel in
+the `Relay-Signature-V2` header. Subscribers verify against the
+subscription's public key, fetched once from `GET /v1/keys` and cached —
+no shared secret ever leaves Relay.
+
+During migration, deliveries carry both the legacy HMAC header and the v2
+header. The v1 HMAC path is scheduled for removal six months after v2
+general availability.
+
+Keys remain per-subscription and rotatable with a 24-hour overlap window
+during which both old and new keys validate.
 
 ## Multi-region posture
 
