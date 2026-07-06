@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Markdown Review — commit picker</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --panel: #111;
+    --panel-2: #161616;
+    --border: #262626;
+    --text: #e6e6e6;
+    --muted: #8a8a8a;
+    --green-bg: #0f2417;
+    --green-bar: #2ea043;
+    --red-bg: #2a1416;
+    --red-bar: #e5484d;
+    --blue: #2563eb;
+    --mono: ui-monospace, "SF Mono", "Geist Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Geist", "Inter", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); }
+  body { padding: 28px 40px; font-size: 15px; }
+
+  .topbar { display: flex; align-items: center; gap: 18px; }
+  .back { color: var(--muted); text-decoration: none; font-size: 14px; }
+  .title { font-weight: 650; font-size: 17px; }
+  .prlink { color: #6ea8fe; font-family: var(--mono); font-size: 14px; }
+  .spacer { flex: 1; }
+
+  .pickers { display: flex; align-items: center; gap: 12px; }
+  .arrow { color: var(--muted); }
+  .picker {
+    position: relative; min-width: 340px; max-width: 420px;
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 9px 12px; font-size: 13px; color: var(--text);
+    display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;
+    white-space: nowrap;
+  }
+  .picker:hover { border-color: #3a3a3a; }
+  .picker.open { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.25); }
+  .picker .lbl { overflow: hidden; text-overflow: ellipsis; }
+  .picker .ver { font-family: var(--mono); color: var(--text); }
+  .picker .caret { margin-left: auto; color: var(--muted); }
+
+  .menu {
+    position: absolute; left: 0; top: calc(100% + 6px); width: 460px; z-index: 30;
+    background: var(--panel-2); border: 1px solid #333; border-radius: 10px; padding: 5px;
+    box-shadow: 0 12px 34px rgba(0,0,0,.6);
+    display: none;
+  }
+  .picker.open .menu { display: block; }
+  .opt {
+    display: flex; gap: 10px; padding: 8px 11px; border-radius: 6px; cursor: pointer;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px;
+  }
+  .opt .ver { font-family: var(--mono); color: var(--text); flex: none; }
+  .opt .msg { color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
+  .opt:hover { background: #202020; }
+  .opt.selected { background: var(--blue); }
+  .opt.selected .ver, .opt.selected .msg { color: #fff; }
+
+  .file { margin-top: 26px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .file-head {
+    display: flex; align-items: center; gap: 12px; padding: 13px 18px;
+    background: var(--panel); border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 14px;
+  }
+  .file-head .add { color: var(--green-bar); }
+  .file-head .del { color: var(--red-bar); }
+  .file-head .scope { margin-left: auto; color: var(--muted); font-family: var(--sans); font-size: 13px; }
+
+  .rows { padding: 14px 0; font-family: var(--mono); font-size: 14.5px; line-height: 1.9; }
+  .row { padding: 2px 20px; position: relative; white-space: pre; color: #cfcfcf; }
+  .row.add { background: var(--green-bg); box-shadow: inset 3px 0 0 var(--green-bar); }
+  .row.del { background: var(--red-bg); box-shadow: inset 3px 0 0 var(--red-bar); color: #d9a7a9; }
+  .row .ln { color: #555; display: inline-block; width: 34px; text-align: right; margin-right: 18px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <a class="back" href="#">← Markdown Review</a>
+    <span class="title">Signature v2, revised retry policy, and delivery replay API</span>
+    <span class="prlink">relayhq/relay#1 ↗</span>
+    <span class="spacer"></span>
+    <div class="pickers">
+      <div class="picker" id="basePicker">
+        <span class="lbl"><span class="ver" id="baseVer">v0 802461a</span> BASE</span>
+        <span class="caret">▾</span>
+        <div class="menu" id="baseMenu">
+          <div class="opt" data-ver="v0 802461a" data-add="28" data-del="7"><span class="ver">v0 802461a</span><span class="msg">BASE – docs: initial Relay product, architecture, API…</span></div>
+          <div class="opt" data-ver="v1 8983284" data-add="25" data-del="4"><span class="ver">v1 8983284</span><span class="msg">– docs: rework retry schedule, pause thresholds, failure budgets</span></div>
+          <div class="opt" data-ver="v2 35c9533" data-add="18" data-del="2"><span class="ver">v2 35c9533</span><span class="msg">– docs: outbox sweeper and DLQ in system diagram, Ed25519 v2</span></div>
+          <div class="opt" data-ver="v3 4a93f5b" data-add="12" data-del="1"><span class="ver">v3 4a93f5b</span><span class="msg">– docs: replay endpoint, schema-version header, error table</span></div>
+          <div class="opt" data-ver="v4 5f58e65" data-add="0" data-del="0"><span class="ver">v4 5f58e65</span><span class="msg">HEAD – docs: transformations join the product surface</span></div>
+        </div>
+      </div>
+      <span class="arrow">→</span>
+      <div class="picker" id="endPicker" style="min-width:200px">
+        <span class="lbl"><span class="ver">v4 5f58e65</span> HEAD</span>
+        <span class="caret">▾</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="file">
+    <div class="file-head">
+      <span>docs/api-reference.md</span>
+      <span class="add" id="addCount">+28</span>
+      <span class="del" id="delCount">−7</span>
+      <span class="scope" id="scopeLabel">base v0 → HEAD · full PR</span>
+    </div>
+    <div class="rows">
+      <div class="row"><span class="ln">33</span>  -H "Idempotency-Key: inv_9f2c1" \</div>
+      <div class="row add"><span class="ln">34</span>  -H "Relay-Schema-Version: 2026-07-01" \</div>
+      <div class="row"><span class="ln">35</span>  -d '{</div>
+      <div class="row del" id="rowDel"><span class="ln">37</span>    "payload": { "invoice_id": "inv_9f2c1", "amount_cents": 12900 }</div>
+      <div class="row add"><span class="ln">38</span>    "payload": { "invoice_id": "inv_9f2c1", "amount_cents": 12900 },</div>
+      <div class="row add"><span class="ln">39</span>    "deduplication_window": "24h"</div>
+      <div class="row"><span class="ln">40</span>  }'</div>
+    </div>
+  </div>
+
+<script>
+  const basePicker = document.getElementById('basePicker');
+  const baseMenu = document.getElementById('baseMenu');
+  const baseVer = document.getElementById('baseVer');
+  const addCount = document.getElementById('addCount');
+  const delCount = document.getElementById('delCount');
+  const scopeLabel = document.getElementById('scopeLabel');
+  const opts = [...baseMenu.querySelectorAll('.opt')];
+
+  function markSelected(ver) {
+    opts.forEach(o => o.classList.toggle('selected', o.dataset.ver === ver));
+  }
+  markSelected('v0 802461a');
+
+  basePicker.addEventListener('click', (e) => {
+    if (e.target.closest('.opt')) return;
+    basePicker.classList.toggle('open');
+  });
+
+  opts.forEach(o => {
+    o.addEventListener('click', () => {
+      const ver = o.dataset.ver;
+      baseVer.textContent = ver;
+      addCount.textContent = '+' + o.dataset.add;
+      delCount.textContent = '−' + o.dataset.del;
+      markSelected(ver);
+      const short = ver.split(' ')[0];
+      scopeLabel.textContent = short === 'v0'
+        ? 'base v0 → HEAD · full PR'
+        : 'base ' + short + ' → HEAD · ' + o.dataset.add + ' added, ' + o.dataset.del + ' removed';
+      basePicker.classList.remove('open');
+    });
+  });
+</script>
+</body>
+</html>
