@@ -43,6 +43,16 @@ attempt an HTTPS POST with a 10-second timeout. Outcomes:
 - **Other 4xx** — delivery marked `failed` immediately; the endpoint is
   telling us the request itself is unacceptable, so retrying is pointless.
 
+The default retry policy backs off exponentially:
+
+| Attempt | Delay | Cumulative |
+| ------- | ----- | ---------- |
+| 1 | immediate | 0s |
+| 2 | 30s | 30s |
+| 3 | 5m | 5m 30s |
+| 4 | 30m | 35m 30s |
+| 5 | 2h | 2h 35m |
+
 ## Data model
 
 Four tables carry the domain; everything else is bookkeeping:
