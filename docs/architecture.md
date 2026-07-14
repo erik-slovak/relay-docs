@@ -46,7 +46,7 @@ attempt an HTTPS POST with a 10-second timeout. Outcomes:
 The default retry policy backs off exponentially:
 
 | Attempt | Delay | Cumulative |
-| ------- | ----- | ---------- |
+| ------- | ----: | ---------: |
 | 1 | immediate | 0s |
 | 2 | 30s | 30s |
 | 3 | 5m | 5m 30s |

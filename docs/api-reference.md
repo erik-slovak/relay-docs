@@ -23,9 +23,10 @@ real deliveries; they route to the CLI tunnel instead.
 | Field      | Type   | Required | Description                                |
 | ---------- | ------ | -------- | ------------------------------------------ |
 | `topic`    | string | yes      | Topic to publish to.                       |
-| `type`     | string | yes      | Event type, e.g. `invoice.paid`.           |
+| `type`     | string | yes      | Dot-separated event type, e.g. `invoice.paid`, max 64 chars. |
 | `payload`  | object | yes      | Event body delivered to subscribers.       |
 | `metadata` | object | no       | Producer-side annotations, not delivered.  |
+| `dedupe_key` | string | no     | Overrides the `Idempotency-Key` header for this event. |
 
 ```bash
 curl -X POST https://api.relay.dev/v1/events \
@@ -57,7 +58,9 @@ Returns `202 Accepted` with the stored event:
 | ------------- | ------ | -------- | ---------------------------------------- |
 | `topic`       | string | yes      | Topic to subscribe to.                   |
 | `endpoint`    | string | yes      | HTTPS URL that receives deliveries.      |
-| `filter`      | string | no       | CEL expression over the event envelope.  |
+
+Filters are now managed on the subscription resource after creation, via
+`PATCH /v1/subscriptions/{id}` with a `filter` body field.
 
 ## List deliveries
 
@@ -82,5 +85,15 @@ Errors use conventional status codes with a machine-readable body:
 | ------ | -------------------------------------------- |
 | 400    | Malformed request or invalid filter.         |
 | 401    | Missing or invalid API key.                  |
-| 409    | Idempotency key reuse with different body.   |
-| 429    | Publish rate limit exceeded.                 |
+| 404    | Unknown topic or subscription.               |
+| 429    | Publish or replay rate limit exceeded.       |
+
+## Rate limit headers
+
+Every response carries the current rate-limit state:
+
+| Header                  | Meaning                        |
+| ----------------------- | ------------------------------ |
+| `X-RateLimit-Limit`     | Requests allowed per window.   |
+| `X-RateLimit-Remaining` | Requests left in the window.   |
+| `Retry-After`           | Seconds to wait after a 429.   |
