@@ -61,10 +61,3 @@ Relay ships as three pieces:
    per-endpoint health.
 3. **CLI** — local tunnel for development (`relay listen`), fixture replay,
    and CI smoke checks.
-
-## Positioning
-
-Relay competes with building in-house, not with queues or brokers. The
-adoption pitch is time-to-first-webhook: a producer integrates the publish
-API in under an hour, and a consumer receives signed, retried deliveries with
-zero infrastructure of their own.
