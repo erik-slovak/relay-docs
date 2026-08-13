@@ -4,6 +4,16 @@ This document is the contract between Relay and subscribers: what we promise
 about delivery, ordering, and retries, and what consumers must handle
 themselves.
 
+## Contents
+
+- [At-least-once delivery](#at-least-once-delivery)
+- [Retry policy](#retry-policy)
+- [Ordering](#ordering)
+- [Endpoint health and pausing](#endpoint-health-and-pausing)
+- [Timeouts](#timeouts)
+- [Replay](#replay)
+- [Escalation matrix](#escalation-matrix)
+
 ## At-least-once delivery
 
 Relay guarantees **at-least-once** delivery: every event is delivered to
@@ -26,7 +36,8 @@ jitter:
 - Attempts 6–10: every 6 hours
 
 After the tenth failed attempt the delivery is marked `failed` and moves to
-the dead-letter view, where it can be replayed manually for up to 30 days.
+the dead-letter view, where it can be replayed manually for up to 30 days —
+see [Replay](#replay).
 
 ## Ordering
 
