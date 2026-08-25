@@ -19,7 +19,7 @@ Failed deliveries are retried on an exponential backoff schedule with full
 jitter:
 
 - Attempt 1: immediate
-- Attempt 2: ~30 seconds
+- Attempt 2: ~45 seconds
 - Attempt 3: ~2 minutes
 - Attempt 4: ~15 minutes
 - Attempt 5: ~1 hour
@@ -29,11 +29,6 @@ After the tenth failed attempt the delivery is marked `failed` and moves to
 the dead-letter view, where it can be replayed manually for up to 30 days.
 
 ## Ordering
-
-Ordering is **best-effort per subscription**, not guaranteed. Retries
-naturally reorder deliveries: if event A fails and event B succeeds, B
-arrives first. Consumers that need strict ordering should buffer on
-`sequence_id`, which is monotonically increasing per topic.
 
 ## Early addition
 
@@ -90,6 +85,10 @@ new deliveries with new ids; the original attempt history is preserved.
 Events that exhaust their retries are parked in the dead-letter queue for seven days.
 You can replay a parked event from the dashboard or with `relay dlq replay <event-id>`.
 Replayed events keep their original `sequence_id` value and delivery identifier.
+
+Parked events are grouped by subscription in the dashboard for easier triage.
+Each group shows the last response status and the time of the final attempt.
+Bulk replay is available for groups of up to one thousand events.
 
 - Parked events do not count against your delivery quota.
 - The queue is per subscription, not per source.
