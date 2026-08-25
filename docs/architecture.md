@@ -32,7 +32,10 @@ store.
 3. Delivery jobs are enqueued after commit (transactional outbox), so a
    crash between commit and enqueue is healed by the outbox sweeper.
 
-## Delivery path
+Ingest rejects payloads over 256 KB with `413 Payload Too Large`; larger
+documents should be referenced by URL and fetched by the subscriber.
+
+## Delivery workers
 
 Workers pull jobs, resolve the subscription's current endpoint and key, and
 attempt an HTTPS POST with a 10-second timeout. Outcomes:
@@ -43,21 +46,25 @@ attempt an HTTPS POST with a 10-second timeout. Outcomes:
 - **Other 4xx** — delivery marked `failed` immediately; the endpoint is
   telling us the request itself is unacceptable, so retrying is pointless.
 
-## Data model
-
 Four tables carry the domain; everything else is bookkeeping:
 
 - `events` — immutable payloads, partitioned by publish day.
 - `subscriptions` — endpoint, filter, retry policy, signing key reference.
 - `deliveries` — one row per (event, subscription), state machine column.
 - `attempts` — one row per HTTP attempt, with response code and latency.
+- `keys` — signing keys per subscription, with activation and retirement
+  timestamps.
 
-## Signing
+## Request signing
 
 Every delivery is signed with HMAC-SHA256 over a canonical string of
-timestamp, delivery id, and raw body. The signature travels in the
-`Relay-Signature` header. Keys are per-subscription and rotatable with a
-24-hour overlap window during which both old and new signatures validate.
+timestamp, delivery id, and raw body; the signature travels in the
+`Relay-Signature` header.
+
+## Key rotation
+
+Keys are per-subscription and rotatable with a 24-hour overlap window
+during which both old and new signatures validate.
 
 ## Multi-region posture
 
