@@ -1,3 +1,11 @@
+## How to read this fixture
+
+Start with this intro, then walk the sections below in order.
+This intro was inserted by the third commit and pushed every other line down.
+Line numbers in a pinned head view therefore differ from line numbers at the branch head.
+Compare the two views to confirm that comments anchor to the right content.
+
+---
 # Relay — Delivery Guarantees
 
 This document is the contract between Relay and subscribers: what we promise
@@ -21,8 +29,6 @@ jitter:
 - Attempt 1: immediate
 - Attempt 2: ~45 seconds
 - Attempt 3: ~2 minutes
-- Attempt 4: ~15 minutes
-- Attempt 5: ~1 hour
 - Attempts 6–10: every 6 hours
 
 After the tenth failed attempt the delivery is marked `failed` and moves to
