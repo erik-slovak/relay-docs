@@ -1,6 +1,6 @@
 ---
 title: Product Overview
-status: draft
+status: published
 owner: platform-docs
 ---
 
