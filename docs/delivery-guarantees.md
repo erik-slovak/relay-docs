@@ -33,7 +33,7 @@ jitter:
 - Attempts 6–10: every 6 hours
 
 After the tenth failed attempt the delivery is marked `failed` and moves to
-the dead-letter view, where it can be replayed manually for up to 30 days.
+the dead-letter view, where it can be replayed manually for up to 45 days.
 
 ## Ordering
 
@@ -51,7 +51,7 @@ It is green in the full pull request diff but grey once the base is moved past t
 
 Relay accepts an event, persists it to the outbox, and hands it to a dispatcher.
 The dispatcher signs the payload and opens a connection to the subscriber endpoint.
-A delivery is marked complete when the endpoint answers with any 2xx status.
+A delivery is marked complete when the endpoint answers with any 2xx status code.
 
 - Events are persisted before the publish call returns.
 - Each delivery attempt carries a fresh `Relay-Timestamp` header.
@@ -109,8 +109,11 @@ Bulk replay is available for groups of up to one thousand events.
 ## Observability
 
 Relay emits a delivery log entry for every attempt, including the response status.
-Log entries are retained for thirty days on all plans.
+Log entries are retained for thirty days on every plan.
 
 - The `relay logs tail` command streams attempts for one subscription.
 - Filter by status with `--status failed` to see only rejected attempts.
 - Alerts can be configured when the failure rate exceeds a threshold.
+
+Retention windows are reviewed quarterly and may be extended without notice.
+Check the changelog for the current values before relying on this page.
