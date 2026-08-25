@@ -35,6 +35,36 @@ naturally reorder deliveries: if event A fails and event B succeeds, B
 arrives first. Consumers that need strict ordering should buffer on
 `sequence_id`, which is monotonically increasing per topic.
 
+## Early addition
+
+This section was added in the first commit of the fixture branch and never changes again.
+It is green in the full pull request diff but grey once the base is moved past the first commit.
+
+## Delivery pipeline
+
+Relay accepts an event, persists it to the outbox, and hands it to a dispatcher.
+The dispatcher signs the payload and opens a connection to the subscriber endpoint.
+A delivery is marked complete when the endpoint answers with any 2xx status.
+
+- Events are persisted before the publish call returns.
+- Each delivery attempt carries a fresh `Relay-Timestamp` header.
+- Response bodies are discarded after logging the first 1 KiB.
+
+## Signing
+
+Every request carries a `Relay-Signature` header computed over the raw body.
+The signature is an HMAC-SHA256 digest keyed with the subscription secret.
+
+```http
+POST /hooks/relay HTTP/1.1
+Relay-Signature: sha256=3f1a9c0e
+Relay-Timestamp: 1720000000
+Content-Type: application/json
+```
+
+Verify the timestamp is within five minutes of your clock before checking the digest.
+Reject requests whose digest does not match; do not fall back to an unsigned mode.
+
 ## Endpoint health and pausing
 
 An endpoint that fails persistently degrades the whole subscription's
@@ -54,3 +84,22 @@ response only signals receipt, not completion.
 Any delivery — succeeded or failed — can be replayed from the dashboard or
 via `POST /v1/deliveries/{id}/replay` for 30 days after publish. Replays are
 new deliveries with new ids; the original attempt history is preserved.
+
+## Dead-letter queue
+
+Events that exhaust their retries are parked in the dead-letter queue for seven days.
+You can replay a parked event from the dashboard or with `relay dlq replay <event-id>`.
+Replayed events keep their original `sequence_id` value and delivery identifier.
+
+- Parked events do not count against your delivery quota.
+- The queue is per subscription, not per source.
+- Replaying an event resets its attempt counter to zero.
+
+## Observability
+
+Relay emits a delivery log entry for every attempt, including the response status.
+Log entries are retained for thirty days on all plans.
+
+- The `relay logs tail` command streams attempts for one subscription.
+- Filter by status with `--status failed` to see only rejected attempts.
+- Alerts can be configured when the failure rate exceeds a threshold.
