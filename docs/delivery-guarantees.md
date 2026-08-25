@@ -29,12 +29,18 @@ jitter:
 - Attempt 1: immediate
 - Attempt 2: ~45 seconds
 - Attempt 3: ~2 minutes
+- Attempt 5: ~1 hour
 - Attempts 6–10: every 6 hours
 
 After the tenth failed attempt the delivery is marked `failed` and moves to
 the dead-letter view, where it can be replayed manually for up to 30 days.
 
 ## Ordering
+
+Ordering is **best-effort per subscription**, not guaranteed. Retries
+naturally reorder deliveries: if event A fails and event B succeeds, B
+arrives first. Consumers that need strict ordering should buffer on
+`sequence_id`, which is monotonically increasing per topic.
 
 ## Early addition
 
