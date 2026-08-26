@@ -1,3 +1,10 @@
+---
+title: Product Overview
+status: published
+owner: platform-docs
+description: Relay is a managed webhook delivery platform that fans a single published event out to every subscribed endpoint with retries, signatures, replay, and full delivery observability, so product teams never build the same queue-and-retry machinery twice.
+---
+
 # Relay — Product Overview
 
 Relay is a managed webhook delivery platform. Producers publish an event once;
